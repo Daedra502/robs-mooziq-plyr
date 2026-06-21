@@ -1,0 +1,1 @@
+- [Electron run-as-node gotcha](electron-run-as-node-gotcha.md) — clear ELECTRON_RUN_AS_NODE before launching from this terminal, or the main process crashes

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self'; media-src file: 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';" />
+    <title>Music Player</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Library: folder browser + column table -->
+      <aside id="library">
+        <div class="lib-head">
+          <h1 class="neon">&#9835; music &#9835;</h1>
+          <div class="nav-row">
+            <button id="up-btn" title="Up one folder">&#8593;</button>
+            <div id="crumbs" class="crumbs"></div>
+          </div>
+          <div class="lib-tools">
+            <input id="search" type="search" placeholder="Search title / artist / album…" />
+            <button id="pick-dir" title="Open a folder">Open&hellip;</button>
+          </div>
+        </div>
+        <div id="lib-head-row" class="table-head"></div>
+        <ul id="entry-list"></ul>
+        <p id="lib-status" class="muted"></p>
+      </aside>
+
+      <!-- Stage: Listen mode (visualizer) OR Mix mode (DJ console) -->
+      <main id="stage">
+        <div id="viz-bar">
+          <div id="viz-buttons"></div>
+          <div class="np">
+            <img id="np-art" alt="" />
+            <span id="now-playing" class="muted"></span>
+          </div>
+          <button id="mode-toggle" title="Toggle DJ mixer">&#127911; Mix</button>
+          <button id="queue-toggle" title="Show queue">Queue (0)</button>
+        </div>
+
+        <!-- Listen mode -->
+        <div id="canvas-wrap">
+          <canvas id="viz-canvas"></canvas>
+          <aside id="queue-panel" class="hidden">
+            <div class="queue-head"><strong>Queue</strong><button id="queue-clear" class="ghost">Clear</button></div>
+            <div class="suggest">
+              <div class="suggest-head">&#128161; Suggested next <span class="muted">(harmonic + popular)</span></div>
+              <ul id="suggest-list"></ul>
+            </div>
+            <ul id="queue-list"></ul>
+          </aside>
+        </div>
+
+        <!-- Mix mode: two XDJ-style players flanking a 2-channel mixer -->
+        <div id="dj-console">
+          <!-- ===== DECK A (XDJ-style player) ===== -->
+          <section class="deck" id="deck-A">
+            <div class="deck-head">
+              <img class="deck-art" id="art-A" alt="" />
+              <span class="deck-tag">A</span>
+              <div class="deck-info"><div class="deck-name" id="name-A">—</div><div class="deck-meta" id="meta-A">—</div></div>
+              <div class="deck-bpm"><span class="bpm-num" id="bpm-A">--.-</span><span class="bpm-unit">BPM</span></div>
+            </div>
+            <canvas class="deck-wave" id="wave-A"></canvas>
+            <div class="deck-seek"><span class="time" id="time-A">0:00</span><input type="range" id="seek-A" min="0" max="1000" value="0" /></div>
+            <div class="pads-wrap">
+              <span class="pads-label">BEAT&nbsp;JUMP</span>
+              <div class="pads" id="pads-A">
+                <button class="pad" data-beats="-16">&#9664;16</button>
+                <button class="pad" data-beats="-8">&#9664;8</button>
+                <button class="pad" data-beats="-4">&#9664;4</button>
+                <button class="pad" data-beats="-1">&#9664;1</button>
+                <button class="pad" data-beats="1">1&#9654;</button>
+                <button class="pad" data-beats="4">4&#9654;</button>
+                <button class="pad" data-beats="8">8&#9654;</button>
+                <button class="pad" data-beats="16">16&#9654;</button>
+              </div>
+            </div>
+            <div class="deck-transport">
+              <button id="cue-A" class="cue" title="Cue to start">CUE</button>
+              <button id="play-A" class="play" title="Play / pause">&#9654;</button>
+              <button id="sync-A" title="Match tempo to other deck">SYNC</button>
+              <button id="load-A" title="Load selected library track">LOAD</button>
+            </div>
+            <div class="deck-tempo"><span>TEMPO</span><input type="range" id="rate-A" min="0.92" max="1.08" step="0.001" value="1" /><span class="rateval" id="rateval-A">100.0%</span></div>
+          </section>
+
+          <!-- ===== CENTER: 2-channel DJ mixer ===== -->
+          <div class="mixer" id="mixer">
+            <div class="mixer-head">MIXER</div>
+            <div class="mixer-channels">
+              <div class="ch" id="ch-A">
+                <div class="ch-eq">
+                  <label class="trim">HI<input type="range" class="vrange" id="eqhi-A" min="-26" max="6" step="1" value="0" /></label>
+                  <label class="trim">MID<input type="range" class="vrange" id="eqmid-A" min="-26" max="6" step="1" value="0" /></label>
+                  <label class="trim">LOW<input type="range" class="vrange" id="eqlo-A" min="-26" max="6" step="1" value="0" /></label>
+                </div>
+                <div class="ch-fader">
+                  <div class="vu"><span class="vu-fill" id="vu-A"></span></div>
+                  <input type="range" class="fader" id="vol-A" min="0" max="1" step="0.01" value="1" />
+                </div>
+                <div class="ch-name">A</div>
+              </div>
+              <div class="ch" id="ch-B">
+                <div class="ch-eq">
+                  <label class="trim">HI<input type="range" class="vrange" id="eqhi-B" min="-26" max="6" step="1" value="0" /></label>
+                  <label class="trim">MID<input type="range" class="vrange" id="eqmid-B" min="-26" max="6" step="1" value="0" /></label>
+                  <label class="trim">LOW<input type="range" class="vrange" id="eqlo-B" min="-26" max="6" step="1" value="0" /></label>
+                </div>
+                <div class="ch-fader">
+                  <div class="vu"><span class="vu-fill" id="vu-B"></span></div>
+                  <input type="range" class="fader" id="vol-B" min="0" max="1" step="0.01" value="1" />
+                </div>
+                <div class="ch-name">B</div>
+              </div>
+            </div>
+            <div class="crossfader"><span>A</span><input type="range" id="crossfader" min="0" max="1" step="0.01" value="0" /><span>B</span></div>
+            <div class="mixer-actions">
+              <button id="load-cue" title="Load the next queued track onto the idle deck">NEXT&nbsp;&#8594;&nbsp;CUE</button>
+              <button id="auto-mix" title="Auto beatmatch &amp; crossfade A&#8596;B">&#8651;&nbsp;AUTO</button>
+            </div>
+          </div>
+
+          <!-- ===== DECK B (XDJ-style player) ===== -->
+          <section class="deck" id="deck-B">
+            <div class="deck-head">
+              <img class="deck-art" id="art-B" alt="" />
+              <span class="deck-tag">B</span>
+              <div class="deck-info"><div class="deck-name" id="name-B">—</div><div class="deck-meta" id="meta-B">—</div></div>
+              <div class="deck-bpm"><span class="bpm-num" id="bpm-B">--.-</span><span class="bpm-unit">BPM</span></div>
+            </div>
+            <canvas class="deck-wave" id="wave-B"></canvas>
+            <div class="deck-seek"><span class="time" id="time-B">0:00</span><input type="range" id="seek-B" min="0" max="1000" value="0" /></div>
+            <div class="pads-wrap">
+              <span class="pads-label">BEAT&nbsp;JUMP</span>
+              <div class="pads" id="pads-B">
+                <button class="pad" data-beats="-16">&#9664;16</button>
+                <button class="pad" data-beats="-8">&#9664;8</button>
+                <button class="pad" data-beats="-4">&#9664;4</button>
+                <button class="pad" data-beats="-1">&#9664;1</button>
+                <button class="pad" data-beats="1">1&#9654;</button>
+                <button class="pad" data-beats="4">4&#9654;</button>
+                <button class="pad" data-beats="8">8&#9654;</button>
+                <button class="pad" data-beats="16">16&#9654;</button>
+              </div>
+            </div>
+            <div class="deck-transport">
+              <button id="cue-B" class="cue" title="Cue to start">CUE</button>
+              <button id="play-B" class="play" title="Play / pause">&#9654;</button>
+              <button id="sync-B" title="Match tempo to other deck">SYNC</button>
+              <button id="load-B" title="Load selected library track">LOAD</button>
+            </div>
+            <div class="deck-tempo"><span>TEMPO</span><input type="range" id="rate-B" min="0.92" max="1.08" step="0.001" value="1" /><span class="rateval" id="rateval-B">100.0%</span></div>
+          </section>
+        </div>
+
+        <div id="controls">
+          <div class="transport">
+            <button id="prev" title="Previous">&#9198;</button>
+            <button id="play" title="Play / Pause">&#9654;</button>
+            <button id="stop" title="Stop">&#9209;</button>
+            <button id="next" title="Next">&#9197;</button>
+            <button id="shuffle" title="Harmonic shuffle this folder">&#128256;</button>
+          </div>
+          <div class="seek">
+            <span id="cur-time" class="time">0:00</span>
+            <input id="seek-bar" type="range" min="0" max="1000" value="0" step="1" />
+            <span id="tot-time" class="time">0:00</span>
+          </div>
+          <div class="volume">
+            <span title="Master volume">&#128266;</span>
+            <input id="volume" type="range" min="0" max="1" value="0.9" step="0.01" />
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <canvas id="overlay"></canvas>
+    <div id="drop-hint">Drop a folder to browse it &middot; drop files to play them</div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
