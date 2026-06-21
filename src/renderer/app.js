@@ -38,7 +38,9 @@ const fmtTime = (s) => {
 const subtitle = (t) => [t.artist, t.album].filter(Boolean).join(' — ');
 
 async function setNowPlaying(t) {
-  $('now-playing').textContent = t ? `${t.title || t.name}${subtitle(t) ? ' · ' + subtitle(t) : ''}` : '';
+  const label = t ? `${t.title || t.name}${subtitle(t) ? ' · ' + subtitle(t) : ''}` : '';
+  $('now-playing').textContent = label;
+  $('np-banner-track').textContent = label || 'Nothing yet — pick a track';
   const art = t ? await window.api.getArt(t.path) : null;
   const img = $('np-art');
   if (art) { img.src = art; img.style.display = 'block'; }
@@ -78,6 +80,7 @@ const browser = new Browser({
   statusEl: $('lib-status'),
   searchInput: $('search'),
   onNavigate: (path) => { settings.lastDir = path; persist(); renderSuggestions(); },
+  onViewChange: () => { $('lib-shuffle').classList.toggle('active', browser.isShuffled()); },
   // Empty queue: the folder becomes the queue. Otherwise insert + jump (preserve queue).
   onPlayNow: (files, index) => {
     if (queue.count() === 0) playTrack(queue.setAll(files, index));
@@ -143,6 +146,10 @@ $('shuffle').addEventListener('click', () => {
   playTrack(queue.setAll(harmonicShuffle(files), 0));
 });
 
+// Shuffle just the library *view* (folders stay ordered) — for browsing inspiration,
+// not playback. Press again to reshuffle; sorting a column returns to sorted order.
+$('lib-shuffle').addEventListener('click', () => browser.shuffleView());
+
 // ============================================================================
 // DJ Mix mode: a miniature two-deck Virtual-DJ console.
 // ============================================================================
@@ -189,6 +196,46 @@ function showDeckBpm(which) {
   }
 }
 
+// Beat-sync: match this deck's tempo to the other deck AND align the beat phase so
+// their beats actually line up (a true beatmatch, not just a tempo match). The
+// beatgrid origin is the track start, matching the deck monitors / beatgrid draw.
+function syncDeck(which) {
+  const other = engine.other(which);
+  const bpm = effectiveBpm(which);
+  const masterBpm = effectiveBpm(other);
+  if (!bpm || !masterBpm) return;
+
+  // 1) Tempo match: heard BPM (= track BPM × playbackRate) equals the other deck's.
+  const rate = (masterBpm * engine.getDeckRate(other)) / bpm;
+  engine.setDeckRate(which, rate); // engine clamps to a safe playbackRate range
+  const applied = engine.getDeckRate(which);
+  const slider = $('rate-' + which);
+  slider.value = String(Math.max(+slider.min, Math.min(+slider.max, applied)));
+  $('rateval-' + which).textContent = fmtPct(applied);
+
+  // 2) Phase align: nudge this deck to the nearest beat of the other deck.
+  alignDeckPhase(which, other);
+  updateDeckUI();
+}
+
+// Shift `which` so its current beat lines up with `master`'s current beat. Each
+// deck's effective BPM defines its beat length (in source seconds); we move by the
+// smallest offset (±half a beat) to the nearest grid line.
+function alignDeckPhase(which, master) {
+  const w = engine.getDeckState(which);
+  const m = engine.getDeckState(master);
+  const wb = effectiveBpm(which);
+  const mb = effectiveBpm(master);
+  if (!w.duration || !m.duration || !wb || !mb) return;
+  const wBeat = 60 / wb;
+  const mPhase = ((m.currentTime / (60 / mb)) % 1 + 1) % 1; // 0..1 of a beat
+  const wPhase = ((w.currentTime / wBeat) % 1 + 1) % 1;
+  let d = mPhase - wPhase;
+  d = ((d + 0.5) % 1 + 1) % 1 - 0.5;                        // nearest beat, -0.5..0.5
+  const newT = Math.max(0, Math.min(w.duration, w.currentTime + d * wBeat));
+  engine.seekDeck(which, newT / w.duration);
+}
+
 // Load a library/queue track onto a specific deck (does not auto-play).
 async function loadDeck(which, t) {
   if (!t) return;
@@ -231,6 +278,11 @@ function setMode(mix) {
     viz.setActive('');           // free the GPU; the deck scopes take over
     monitors.enabled = true;
     monitors.resize();
+    // Center the crossfader so BOTH decks pass to the master and can be mixed
+    // simultaneously; the per-channel faders then control each deck's level.
+    // (At the listen-mode default the crossfader sits full-A, which gates B to
+    // silence — the reason deck B appeared to send nothing to the master.)
+    engine.setCrossfader(0.5);
     ensurePeaks('A');
     ensurePeaks('B');
     updateDeckUI();
@@ -300,18 +352,8 @@ for (const which of ['A', 'B']) {
   $('eqmid-' + which).addEventListener('input', (e) => engine.setDeckEq(which, 'mid', +e.target.value));
   $('eqlo-' + which).addEventListener('input', (e) => engine.setDeckEq(which, 'low', +e.target.value));
 
-  // Sync this deck's tempo to the other deck (uses tag BPM or the estimate).
-  $('sync-' + which).addEventListener('click', () => {
-    const other = engine.other(which);
-    const bpm = effectiveBpm(which);
-    const otherBpm = effectiveBpm(other);
-    if (!bpm || !otherBpm) return;
-    const rate = (otherBpm * engine.getDeckRate(other)) / bpm;
-    engine.setDeckRate(which, rate);
-    const s = $('rate-' + which);
-    s.value = String(Math.max(+s.min, Math.min(+s.max, rate)));
-    $('rateval-' + which).textContent = fmtPct(rate);
-  });
+  // Sync this deck's tempo + beat phase to the other deck.
+  $('sync-' + which).addEventListener('click', () => syncDeck(which));
 }
 
 // Load the next queued track onto whichever deck is idle (the "cue" deck).

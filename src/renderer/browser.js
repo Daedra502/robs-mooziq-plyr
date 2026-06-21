@@ -23,6 +23,7 @@ export class Browser {
     this.playingPath = null;
     this.query = '';
     this.sort = { key: 'title', dir: 1 };
+    this.shuffleOrder = null; // when set: array of file paths giving a random track order
 
     this.upBtn.addEventListener('click', () => this.up());
     this.searchInput.addEventListener('input', () => {
@@ -53,6 +54,7 @@ export class Browser {
     this.selected = -1;
     this.searchInput.value = '';
     this.query = '';
+    this.shuffleOrder = null; // a fresh folder starts in sorted order
     this._renderCrumbs();
     this._renderEntries();
     this.onNavigate?.(listing.path);
@@ -64,6 +66,25 @@ export class Browser {
 
   // The currently displayed (filtered + sorted) files — the play context.
   files() { return this._displayed(); }
+
+  // Shuffle the *track* view for inspiration. Folders keep their sorted order;
+  // only the files are randomized. Clicking a column header (or navigating) exits
+  // shuffle and returns to the sorted view.
+  shuffleView() {
+    const files = this.listing?.files ?? [];
+    if (files.length < 2) return;
+    const order = files.map((t) => t.path);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    this.shuffleOrder = order;
+    this.selected = -1;
+    this._markSort();
+    this._renderEntries();
+  }
+
+  isShuffled() { return !!this.shuffleOrder; }
 
   // The single-clicked (highlighted) track, for loading onto a DJ deck.
   selectedTrack() {
@@ -89,13 +110,15 @@ export class Browser {
   _setSort(key) {
     if (this.sort.key === key) this.sort.dir *= -1;
     else this.sort = { key, dir: 1 };
+    this.shuffleOrder = null; // choosing a column exits the shuffled view
     this._markSort();
     this._renderEntries();
   }
 
   _markSort() {
+    const shuffled = this.isShuffled();
     for (const th of this.headEl.querySelectorAll('.th[data-sort]')) {
-      const active = th.dataset.sort === this.sort.key;
+      const active = !shuffled && th.dataset.sort === this.sort.key;
       th.classList.toggle('sorted', active);
       th.dataset.arrow = active ? (this.sort.dir > 0 ? '▲' : '▼') : '';
     }
@@ -109,6 +132,10 @@ export class Browser {
         (t.title || t.name).toLowerCase().includes(q) ||
         t.artist.toLowerCase().includes(q) ||
         t.album.toLowerCase().includes(q));
+    }
+    if (this.shuffleOrder) {
+      const rank = new Map(this.shuffleOrder.map((p, i) => [p, i]));
+      return [...files].sort((a, b) => (rank.get(a.path) ?? 1e9) - (rank.get(b.path) ?? 1e9));
     }
     const { key, dir } = this.sort;
     return [...files].sort((a, b) => dir * this._cmp(a, b, key));
@@ -170,7 +197,9 @@ export class Browser {
     files.forEach((t, i) => this.listEl.appendChild(this._fileRow(t, files, i)));
 
     this._refreshStates();
-    this.statusEl.textContent = `${folders.length} folder${folders.length === 1 ? '' : 's'}, ${files.length} track${files.length === 1 ? '' : 's'}`;
+    const shuf = this.isShuffled() ? ' · shuffled' : '';
+    this.statusEl.textContent = `${folders.length} folder${folders.length === 1 ? '' : 's'}, ${files.length} track${files.length === 1 ? '' : 's'}${shuf}`;
+    this.onViewChange?.();
   }
 
   _fileRow(t, files, i) {

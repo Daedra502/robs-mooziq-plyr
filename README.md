@@ -51,6 +51,11 @@ npm start
 - **🔀 Shuffle** builds a queue from the current folder, ordered by **harmonic key
   compatibility** (Camelot wheel) with random tie-breaking, so the mix stays
   cohesive. Tracks without key tags are sprinkled in.
+- **🔀 (library toolbar)** shuffles just the **track view** — folders keep their order;
+  only the displayed tracks are randomized, to spark ideas for what to play next.
+  Press again to reshuffle; clicking any column header returns to the sorted view.
+- A **Currently playing:** chip in the Listen view always shows the active track over
+  the visualizer.
 - **⇄ mix** crossfades into the next queued track, tempo-matching by BPM (see
   *DJ framework* below).
 - **🎧 Mix** toggles between **Listen mode** (visualizer + queue) and **Mix mode**:
@@ -68,9 +73,11 @@ npm start
   trims and a **vertical channel volume fader** (styled like real DJ gear) with a live
   **VU meter** for **Track A** and **Track B**, an **A↔B crossfader**, **Next → cue**,
   and **⇄ auto** (beatmatch+crossfade). **Load** (or **drag a track from the library
-  onto a deck**) loads it; **Sync** matches a deck's tempo to the other. Both decks sum
-  into the master, so the visualizers always read the live A+B mix. Leaving Mix mode
-  restores clean playback.
+  onto a deck**) loads it; **Sync** both **tempo-matches** and **beat-phase-aligns** a
+  deck to the other (its beats snap to the other deck's grid). Entering Mix mode centers
+  the crossfader so **both decks pass to the master and can be played/mixed at once** —
+  the per-channel faders then set each deck's level. Both decks sum into the master, so
+  the visualizers always read the live A+B mix. Leaving Mix mode restores clean playback.
 - **💡 Suggested next** (in the Queue panel) ranks the current folder's other
   tracks by **harmonic key compatibility** (Camelot distance) nudged by local
   **play-count popularity**; click to queue.

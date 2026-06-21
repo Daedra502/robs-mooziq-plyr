@@ -19,6 +19,7 @@
           </div>
           <div class="lib-tools">
             <input id="search" type="search" placeholder="Search title / artist / album…" />
+            <button id="lib-shuffle" title="Shuffle the track view for inspiration (folders stay ordered)">&#128256;</button>
             <button id="pick-dir" title="Open a folder">Open&hellip;</button>
           </div>
         </div>
@@ -42,6 +43,7 @@
         <!-- Listen mode -->
         <div id="canvas-wrap">
           <canvas id="viz-canvas"></canvas>
+          <div id="now-playing-banner"><span class="np-label">Currently playing:</span> <span id="np-banner-track" class="np-track">Nothing yet — pick a track</span></div>
           <aside id="queue-panel" class="hidden">
             <div class="queue-head"><strong>Queue</strong><button id="queue-clear" class="ghost">Clear</button></div>
             <div class="suggest">
