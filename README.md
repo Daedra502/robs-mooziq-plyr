@@ -3,9 +3,10 @@
 A small, scalable desktop music player built on **Electron + the Web Audio API**,
 with a plug-in visualization system. It browses your folders like a file explorer
 (sortable, searchable columns with album art, BPM and key), plays audio with
-DJ-style transport, an explicit queue, and a harmonic shuffle, and renders five
-real-time visualizers (waveform, spectrograph, stereograph, particles, and a
-high-contrast "Black & White") that all tap a single shared audio graph — plus an
+DJ-style transport, an explicit queue, and a harmonic shuffle, and renders six
+real-time visualizers (waveform, spectrograph, stereograph, particles, a
+high-contrast "Black & White", and a "BZ Reaction" reaction-diffusion field) that
+all tap a single shared audio graph — plus an
 always-on audio-reactive neon window border. In Listen mode, tracks auto-transition
 with a 10-second Spotify-style crossfade, and a Track History panel logs what played. A two-deck **Mix mode** adds a miniature DJ console: per-deck EQ/faders,
 scrolling waveforms with a beatgrid + phrase meter, bar jumps, drag-to-nudge, and
@@ -125,6 +126,7 @@ src/
       stereograph.js
       particles.js      #   audio-reactive swarm (per-band colour, emitters, forces)
       blackwhite.js     #   G Jones-inspired monochrome placeholder (kaleido + glitch)
+      reaction.js       #   digital Belousov-Zhabotinsky field: ASCII filter + kaleido + glitch
 ```
 
 ### Mix mode (mini DJ console) + beatmatch framework
@@ -201,7 +203,7 @@ object, and switches the active visualizer. To add one:
 1. Create `src/renderer/viz/my-viz.js` exporting a class with `static id` /
    `static label` that implements the interface.
 2. Register it in [src/renderer/app.js](src/renderer/app.js) — add your class to
-   the `[Waveform, Spectrograph, Stereograph, Particles, BlackWhite]` list.
+   the `[Waveform, Spectrograph, Stereograph, Particles, BlackWhite, Reaction]` list.
 
 That's all. Nothing in the audio engine changes. [particles.js](src/renderer/viz/particles.js)
 is the worked example: it reads `frame.input.pointer` and needs nothing from the
