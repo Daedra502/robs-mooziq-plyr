@@ -11,6 +11,7 @@ import { Visualizer } from './interface.js';
 // The simulation runs on a coarse cell grid (cheap), and that same grid is the ASCII
 // character grid, so one buffer drives both the physics and the glyphs.
 const RAMP = ' .,:;irsXA253hMHGS#9B&@'; // dark -> bright glyph ramp
+const WAVE = '~=≈+*x><)(';             // glyphs for the tiled wavetable strands
 const A = 1.0, B = 1.0, G = 1.0;        // BZ reaction constants (audio nudges G)
 
 export class Reaction extends Visualizer {
@@ -22,6 +23,8 @@ export class Reaction extends Visualizer {
     this.bassAvg = 0;
     this.beatHold = 0;
     this.rot = 0;
+    this.hueShift = 0; // music-driven colour rotation
+    this.flash = 0;    // strobe envelope (1 -> 0)
     this._allocate();
   }
 
@@ -91,56 +94,76 @@ export class Reaction extends Visualizer {
     this.beatHold = beat ? 9 : this.beatHold - dt;
     if (beat) this._nucleate();
 
+    // treble band, for colour saturation + faster hue spin on bright material
+    let treble = 0;
+    for (let i = 180; i < 600; i++) treble += freq[i];
+    treble /= 420 * 255;
+    const energy = bass + mid + treble;
+
     // --- advance the reaction (faster when louder) --------------------------
     this._step(G + bass * 0.9);
     if (bass > 0.4) this._step(G + bass * 0.9);
 
+    // --- music-reactive colour + strobe envelope ----------------------------
+    this.hueShift = (this.hueShift + (0.01 + energy * 0.6) * frame.timing.delta) % 360;
+    if (beat && Math.random() < 0.55) this.flash = 1;          // strobe on some beats
+    this.flash = Math.max(0, this.flash - 0.16 * dt);
+    const baseHue = this.hueShift;
+    const sat = 70 + Math.min(28, treble * 90);               // brighter highs -> punchier colour
+    const lift = this.flash * 38;                              // strobe whitens the field
+
     // --- kaleidoscope params -------------------------------------------------
     this.rot += (0.002 + this.bassAvg * 0.02) * frame.timing.delta;
-    const folds = 2 * (2 + Math.round(mid * 6)); // even fold count, audio-driven
+    const folds = 2 * (2 + Math.round(mid * 6));               // even fold count, audio-driven
     const seg = (Math.PI * 2) / folds;
+    const tiles = 2 + Math.round(mid * 4);                     // wavetable tiling, audio-driven
 
     g.fillStyle = '#05050a';
     g.fillRect(0, 0, w, h);
 
-    // --- ASCII render of the kaleidoscopically-folded field -----------------
+    // --- ASCII render: folded BZ field with the tiled wavetable woven in -----
     const { cols, rows, cell, charH, a, c } = this;
-    const baseHue = (frame.timing.elapsed * 0.02 + this.bassAvg * 120) % 360;
+    const time = frame.time, m = time.length;
+    const waveHue = (baseHue + 160) % 360;
     g.font = `${Math.round(charH * 0.9)}px monospace`;
     g.textBaseline = 'top';
     for (let gy = 0; gy < rows; gy++) {
       const ny = (gy + 0.5) / rows - 0.5;
       for (let gx = 0; gx < cols; gx++) {
         const nx = (gx + 0.5) / cols - 0.5;
-        // Fold into an n-fold mirrored wedge.
+        // Fold into an n-fold mirrored wedge (kaleidoscope).
         const rad = Math.hypot(nx, ny);
         let ang = Math.atan2(ny, nx) + this.rot;
         ang = Math.abs((((ang % seg) + seg) % seg) - seg / 2);
         const sx = (((Math.cos(ang) * rad + 0.5) % 1) + 1) % 1;
         const sy = (((Math.sin(ang) * rad + 0.5) % 1) + 1) % 1;
+
+        // Tiled, kaleidoscoped wavetable: the waveform repeats `tiles` times across
+        // the folded x; cells near its amplitude curve become bright wave strands.
+        const wv = (time[((sx * tiles) % 1 * m) | 0] - 128) / 128; // -1..1
+        const d = Math.abs(sy - (0.5 + wv * 0.42));
+        if (d < 0.05) {
+          const wch = WAVE[Math.min(WAVE.length - 1, ((1 - d / 0.05) * WAVE.length) | 0)];
+          g.fillStyle = `hsl(${waveHue | 0}, 100%, ${Math.min(95, 60 + lift) | 0}%)`;
+          g.fillText(wch, gx * cell, gy * charH);
+          continue;
+        }
+
         const si = ((sy * rows) | 0) * cols + ((sx * cols) | 0);
-        const v = a[si] * (1 - c[si] * 0.5); // intensity from chemical state
-        if (v < 0.12) continue;              // leave dark cells blank (cheap + contrasty)
+        const v = a[si] * (1 - c[si] * 0.5);  // intensity from chemical state
+        if (v < 0.12) continue;               // leave dark cells blank (cheap + contrasty)
         const ch = RAMP[Math.min(RAMP.length - 1, (v * RAMP.length) | 0)];
         const hue = (baseHue + c[si] * 140) % 360;
-        g.fillStyle = `hsl(${hue | 0}, 90%, ${(35 + v * 45) | 0}%)`;
+        g.fillStyle = `hsl(${hue | 0}, ${sat | 0}%, ${Math.min(95, 35 + v * 45 + lift) | 0}%)`;
         g.fillText(ch, gx * cell, gy * charH);
       }
     }
 
-    // --- wavetable scope overlay --------------------------------------------
-    const time = frame.time, m = time.length, mid2 = h / 2;
-    g.strokeStyle = `hsla(${(baseHue + 180) % 360}, 100%, 70%, 0.85)`;
-    g.lineWidth = 2;
-    g.shadowColor = g.strokeStyle; g.shadowBlur = 12;
-    g.beginPath();
-    for (let i = 0; i < m; i++) {
-      const x = (i / (m - 1)) * w;
-      const y = mid2 + ((time[i] - 128) / 128) * h * 0.34;
-      i ? g.lineTo(x, y) : g.moveTo(x, y);
+    // --- strobe wash --------------------------------------------------------
+    if (this.flash > 0.01) {
+      g.fillStyle = `hsla(${waveHue | 0}, 100%, 85%, ${this.flash * 0.4})`;
+      g.fillRect(0, 0, w, h);
     }
-    g.stroke();
-    g.shadowBlur = 0;
 
     // --- glitch: shift random horizontal slices on strong bass --------------
     if (this.bassAvg > 0.22 && Math.random() < 0.5) {

@@ -6,6 +6,7 @@ import { Stereograph } from './viz/stereograph.js';
 import { Particles } from './viz/particles.js';
 import { BlackWhite } from './viz/blackwhite.js';
 import { Reaction } from './viz/reaction.js';
+import { SacredGeometry } from './viz/sacred.js';
 import { ReactiveChrome } from './chrome.js';
 import { Browser } from './browser.js';
 import { Queue } from './queue.js';
@@ -28,7 +29,7 @@ let autoXfArmed = false; // becomes true once the current track's crossfade has 
 // --- Audio + visualization ---------------------------------------------------
 const engine = new AudioEngine();
 const viz = new VizManager($('viz-canvas'), engine);
-[Waveform, Spectrograph, Stereograph, Particles, BlackWhite, Reaction].forEach((V) => viz.register(V.id, new V(), V.label));
+[Waveform, Spectrograph, Stereograph, Particles, BlackWhite, Reaction, SacredGeometry].forEach((V) => viz.register(V.id, new V(), V.label));
 viz.addOverlay(new ReactiveChrome($('overlay')));
 const monitors = new DeckMonitors(engine, { A: $('wave-A'), B: $('wave-B') }, { A: $('vu-A'), B: $('vu-B') });
 viz.addOverlay(monitors);

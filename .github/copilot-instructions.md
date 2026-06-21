@@ -77,7 +77,8 @@ src/
     viz/
       interface.js      #   the visualizer contract + base class
       manager.js        #   single rAF loop, input capture, frame building, active-viz switching
-      waveform.js spectrograph.js stereograph.js particles.js blackwhite.js reaction.js
+      waveform.js spectrograph.js stereograph.js particles.js blackwhite.js
+      reaction.js sacred.js
 ```
 
 Data flow is one-directional: **engine → manager → visualizer**. The audio engine
