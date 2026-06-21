@@ -4,6 +4,7 @@ import { Waveform } from './viz/waveform.js';
 import { Spectrograph } from './viz/spectrograph.js';
 import { Stereograph } from './viz/stereograph.js';
 import { Particles } from './viz/particles.js';
+import { BlackWhite } from './viz/blackwhite.js';
 import { ReactiveChrome } from './chrome.js';
 import { Browser } from './browser.js';
 import { Queue } from './queue.js';
@@ -13,14 +14,20 @@ import { harmonicShuffle, keyDistance, camelot } from './key.js';
 const $ = (id) => document.getElementById(id);
 
 // --- Persistence -------------------------------------------------------------
-let settings = { lastDir: null, volume: 0.9, visualizer: null, plays: {} };
+let settings = { lastDir: null, volume: 0.9, visualizer: null, plays: {}, history: [] };
 const persist = () => window.api.saveStore(settings);
 let draggedTrack = null; // library track currently being dragged onto a deck
+
+// Listen-mode auto-transition: when a track nears its end, the next queued track
+// starts on the idle deck and the two overlap for a seamless crossfade (Spotify-
+// style). The same master graph is used as in Mix mode, so visualizers see both.
+const LISTEN_XFADE_SECONDS = 10;
+let autoXfArmed = false; // becomes true once the current track's crossfade has fired
 
 // --- Audio + visualization ---------------------------------------------------
 const engine = new AudioEngine();
 const viz = new VizManager($('viz-canvas'), engine);
-[Waveform, Spectrograph, Stereograph, Particles].forEach((V) => viz.register(V.id, new V(), V.label));
+[Waveform, Spectrograph, Stereograph, Particles, BlackWhite].forEach((V) => viz.register(V.id, new V(), V.label));
 viz.addOverlay(new ReactiveChrome($('overlay')));
 const monitors = new DeckMonitors(engine, { A: $('wave-A'), B: $('wave-B') }, { A: $('vu-A'), B: $('vu-B') });
 viz.addOverlay(monitors);
@@ -55,13 +62,35 @@ async function playTrack(t) {
   if (!t) return;
   engine.load(t.url);
   deckTrack[engine.primary] = t;
+  autoXfArmed = false; // a fresh track can arm its own end-of-track crossfade
   setNowPlaying(t);
   browser.setPlaying(t.path);
   bumpPlay(t);
+  pushHistory(t);
   renderQueue();
   renderSuggestions();
   try { await engine.play(); } catch (err) { console.error('playback failed:', err); }
   updateDeckUI();
+}
+
+// Listen-mode seamless transition: start the next queued track on the idle deck and
+// crossfade over LISTEN_XFADE_SECONDS while the current track is still playing. Pure
+// volume crossfade (no tempo match) — that's the Mix-mode "auto" job, not this one.
+async function listenCrossfadeNext() {
+  const nxt = queue.peekNext();
+  if (!nxt || engine.crossfading) return;
+  const incoming = engine.other(engine.primary);
+  deckTrack[incoming] = nxt;
+  monitors.clearDeck(incoming);
+  setNowPlaying(nxt);
+  browser.setPlaying(nxt.path);
+  bumpPlay(nxt);
+  pushHistory(nxt);
+  await engine.crossfadeTo(nxt.url, { duration: LISTEN_XFADE_SECONDS });
+  queue.jumpTo(queue.index + 1);
+  autoXfArmed = false; // the new current track can arm its own crossfade
+  renderQueue();
+  renderSuggestions();
 }
 
 function advance() {
@@ -126,6 +155,45 @@ function renderQueue() {
 const updateQueueToggle = () => { $('queue-toggle').textContent = `Queue (${queue.count()})`; };
 $('queue-toggle').addEventListener('click', () => $('queue-panel').classList.toggle('hidden'));
 $('queue-clear').addEventListener('click', () => { queue.clear(); engine.stop(); $('play').textContent = '▶'; setNowPlaying(null); browser.setPlaying(null); });
+
+// --- Track history -----------------------------------------------------------
+// A rolling log of what has played (most recent first). Persisted with settings so
+// it survives restarts. Only the fields needed to re-play and display are stored.
+const HISTORY_MAX = 100;
+function pushHistory(t) {
+  if (!t) return;
+  const top = settings.history[0];
+  if (top && top.path === t.path) return; // collapse consecutive repeats
+  settings.history.unshift({
+    path: t.path, url: t.url, title: t.title, name: t.name, artist: t.artist,
+    bpm: t.bpm, key: t.key, at: Date.now(),
+  });
+  if (settings.history.length > HISTORY_MAX) settings.history.length = HISTORY_MAX;
+  persist();
+  renderHistory();
+}
+
+function renderHistory() {
+  const ul = $('history-list');
+  if (!ul) return;
+  ul.innerHTML = '';
+  for (const t of settings.history) {
+    const li = document.createElement('li');
+    li.className = 'h-item';
+    li.innerHTML = `<span class="h-title"></span><button class="h-add ghost" title="Add to queue">＋</button>`;
+    li.querySelector('.h-title').textContent = `${t.title || t.name}${t.artist ? ' — ' + t.artist : ''}`;
+    li.querySelector('.h-title').addEventListener('click', () => playTrack(queue.playNowInsert(t)));
+    li.querySelector('.h-add').addEventListener('click', (e) => { e.stopPropagation(); queue.add(t); });
+    ul.appendChild(li);
+  }
+  $('history-toggle').textContent = `History (${settings.history.length})`;
+}
+$('history-toggle').addEventListener('click', () => {
+  const panel = $('history-panel');
+  panel.classList.toggle('hidden');
+  $('canvas-wrap').classList.toggle('history-open', !panel.classList.contains('hidden'));
+});
+$('history-clear').addEventListener('click', () => { settings.history = []; persist(); renderHistory(); });
 
 // --- Transport ---------------------------------------------------------------
 $('play').addEventListener('click', async () => {
@@ -320,6 +388,7 @@ async function autoMix() {
   setNowPlaying(nxt);
   browser.setPlaying(nxt.path);
   bumpPlay(nxt);
+  pushHistory(nxt);
   await engine.crossfadeTo(nxt.url, { duration: 8, fromBPM: cur.bpm, toBPM: nxt.bpm, align: true });
   queue.jumpTo(queue.index + 1);
   ensurePeaks(incoming);
@@ -457,6 +526,18 @@ engine.on('timeupdate', () => {
   $('cur-time').textContent = fmtTime(currentTime);
   $('tot-time').textContent = fmtTime(duration);
   if (!seeking && duration > 0) seekBar.value = String(Math.round((currentTime / duration) * 1000));
+
+  // Listen-mode auto-transition: arm once, when the track nears its end and a next
+  // track exists. Skipped in Mix mode (the DJ drives the decks) and for tracks too
+  // short to overlap. The actual blend runs through the shared master graph.
+  if (!mixMode && !autoXfArmed && !engine.crossfading && queue.hasNext()
+      && duration > LISTEN_XFADE_SECONDS + 2) {
+    const remaining = duration - currentTime;
+    if (remaining > 0.3 && remaining <= LISTEN_XFADE_SECONDS) {
+      autoXfArmed = true;
+      listenCrossfadeNext();
+    }
+  }
 });
 engine.on('ended', advance);
 engine.on('play', () => { $('play').textContent = '⏸'; });
@@ -498,5 +579,7 @@ window.addEventListener('drop', async (e) => {
   viz.setActive(viz.registry.has(settings.visualizer) ? settings.visualizer : Waveform.id);
   refreshVizButtons();
   updateQueueToggle();
+  if (!Array.isArray(settings.history)) settings.history = [];
+  renderHistory();
   await browser.navigate(settings.lastDir || (await window.api.defaultDir()));
 })();

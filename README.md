@@ -3,10 +3,11 @@
 A small, scalable desktop music player built on **Electron + the Web Audio API**,
 with a plug-in visualization system. It browses your folders like a file explorer
 (sortable, searchable columns with album art, BPM and key), plays audio with
-DJ-style transport, an explicit queue, and a harmonic shuffle, and renders four
-real-time visualizers (waveform, spectrograph, stereograph, particles) that all
-tap a single shared audio graph — plus an always-on audio-reactive neon window
-border. A two-deck **Mix mode** adds a miniature DJ console: per-deck EQ/faders,
+DJ-style transport, an explicit queue, and a harmonic shuffle, and renders five
+real-time visualizers (waveform, spectrograph, stereograph, particles, and a
+high-contrast "Black & White") that all tap a single shared audio graph — plus an
+always-on audio-reactive neon window border. In Listen mode, tracks auto-transition
+with a 10-second Spotify-style crossfade, and a Track History panel logs what played. A two-deck **Mix mode** adds a miniature DJ console: per-deck EQ/faders,
 scrolling waveforms with a beatgrid + phrase meter, bar jumps, drag-to-nudge, and
 a harmonic+popularity "suggested next".
 
@@ -48,6 +49,15 @@ npm start
   otherwise *play now* / *play next* insert without disturbing the rest.
 - **Queue** button (top-right) opens the queue panel — click an item to jump,
   **✕** to remove, **Clear** to empty.
+- **History** button (right of Queue) opens the **Track History** panel — a rolling
+  log of what has played (most recent first), persisted across restarts. Click a row
+  to play it now, **＋** to re-queue it, **Clear** to empty. With both panels open,
+  History docks to the right of the Queue.
+- **Auto-transition (Listen mode):** when the playing track nears its end and the
+  queue has a next track, the next track starts on the idle deck and the two **overlap
+  for a 10-second crossfade** through the shared master graph — a seamless, Spotify-
+  style segue (no tempo-matching; that's Mix mode's job). Short tracks fall back to a
+  clean cut.
 - **🔀 Shuffle** builds a queue from the current folder, ordered by **harmonic key
   compatibility** (Camelot wheel) with random tie-breaking, so the mix stays
   cohesive. Tracks without key tags are sprinkled in.
@@ -114,6 +124,7 @@ src/
       spectrograph.js   #   log-freq, smooth fill, falling peak-hold (Wave Candy-ish)
       stereograph.js
       particles.js      #   audio-reactive swarm (per-band colour, emitters, forces)
+      blackwhite.js     #   G Jones-inspired monochrome placeholder (kaleido + glitch)
 ```
 
 ### Mix mode (mini DJ console) + beatmatch framework
@@ -190,7 +201,7 @@ object, and switches the active visualizer. To add one:
 1. Create `src/renderer/viz/my-viz.js` exporting a class with `static id` /
    `static label` that implements the interface.
 2. Register it in [src/renderer/app.js](src/renderer/app.js) — add your class to
-   the `[Waveform, Spectrograph, Stereograph, Particles]` list.
+   the `[Waveform, Spectrograph, Stereograph, Particles, BlackWhite]` list.
 
 That's all. Nothing in the audio engine changes. [particles.js](src/renderer/viz/particles.js)
 is the worked example: it reads `frame.input.pointer` and needs nothing from the

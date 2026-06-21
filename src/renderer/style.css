@@ -143,13 +143,22 @@ body::after {
 #now-playing-banner .np-label { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
 #now-playing-banner .np-track { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Queue slide-in panel */
-#queue-panel {
+/* Queue + History slide-in panels (top-right; History docks to the right of Queue) */
+#queue-panel, #history-panel {
   position: absolute; top: 0; right: 0; bottom: 0; width: 300px; z-index: 5;
   background: rgba(18,18,27,0.96); border-left: 1px solid var(--border);
-  display: flex; flex-direction: column; transition: transform 0.22s ease;
+  display: flex; flex-direction: column; transition: transform 0.22s ease, right 0.22s ease;
 }
-#queue-panel.hidden { transform: translateX(100%); }
+#history-panel { z-index: 6; }
+#queue-panel.hidden, #history-panel.hidden { transform: translateX(100%); }
+/* When History is open, slide the Queue panel left so they sit side by side. */
+#canvas-wrap.history-open #queue-panel { right: 300px; }
+
+#history-list { list-style: none; margin: 0; padding: 6px; overflow-y: auto; flex: 1; }
+.h-item { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; }
+.h-item:hover { background: var(--panel-2); }
+.h-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; cursor: pointer; }
+.h-add { padding: 2px 7px; font-size: 12px; }
 .queue-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border); }
 .suggest { border-bottom: 1px solid var(--border); padding: 8px 8px 6px; }
 .suggest-head { font-size: 12px; margin-bottom: 4px; }

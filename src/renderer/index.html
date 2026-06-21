@@ -38,6 +38,7 @@
           </div>
           <button id="mode-toggle" title="Toggle DJ mixer">&#127911; Mix</button>
           <button id="queue-toggle" title="Show queue">Queue (0)</button>
+          <button id="history-toggle" title="Show track history">History (0)</button>
         </div>
 
         <!-- Listen mode -->
@@ -51,6 +52,10 @@
               <ul id="suggest-list"></ul>
             </div>
             <ul id="queue-list"></ul>
+          </aside>
+          <aside id="history-panel" class="hidden">
+            <div class="queue-head"><strong>Track History</strong><button id="history-clear" class="ghost">Clear</button></div>
+            <ul id="history-list"></ul>
           </aside>
         </div>
 
