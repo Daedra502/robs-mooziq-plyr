@@ -86,7 +86,7 @@ export class Browser {
 
   isShuffled() { return !!this.shuffleOrder; }
 
-  // The single-clicked (highlighted) track, for loading onto a DJ deck.
+  // The single-clicked (highlighted) track.
   selectedTrack() {
     const files = this._displayed();
     return this.selected >= 0 && this.selected < files.length ? files[this.selected] : null;
@@ -230,11 +230,6 @@ export class Browser {
 
     li.addEventListener('click', () => { this.selected = i; this._refreshStates(); });
     li.addEventListener('dblclick', () => this.onPlayNow?.(files, i));
-
-    // Draggable onto a DJ deck (Mix mode).
-    li.draggable = true;
-    li.addEventListener('dragstart', (e) => { e.dataTransfer.effectAllowed = 'copy'; this.onDragTrack?.(t); });
-    li.addEventListener('dragend', () => this.onDragEnd?.());
     return li;
   }
 

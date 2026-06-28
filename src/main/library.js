@@ -34,16 +34,26 @@ async function readMeta(file) {
     duration: 0,
     bpm: 0,
     key: '',
+    // Classic-player LCD readouts (kbps · kHz · stereo), filled from format below.
+    bitrate: 0,
+    sampleRate: 0,
+    channels: 0,
+    codec: '',
   };
   try {
     const meta = await (await mm()).parseFile(file, { duration: true, skipCovers: true });
     const c = meta.common || {};
+    const f = meta.format || {};
     if (c.title) track.title = c.title;
     if (c.artist) track.artist = c.artist;
     if (c.album) track.album = c.album;
     if (c.bpm) track.bpm = Math.round(c.bpm);
     if (c.key) track.key = String(c.key);
-    if (meta.format?.duration) track.duration = meta.format.duration;
+    if (f.duration) track.duration = f.duration;
+    if (f.bitrate) track.bitrate = Math.round(f.bitrate / 1000); // kbps
+    if (f.sampleRate) track.sampleRate = f.sampleRate;            // Hz
+    if (f.numberOfChannels) track.channels = f.numberOfChannels;
+    if (f.codec) track.codec = String(f.codec);
   } catch {
     // Unreadable tags — keep the filename fallback.
   }
@@ -150,4 +160,4 @@ async function scan(paths) {
   return Promise.all(files.map(readMeta));
 }
 
-module.exports = { listDir, scan, getArt };
+module.exports = { listDir, scan, getArt, isAudioPath: isAudio };

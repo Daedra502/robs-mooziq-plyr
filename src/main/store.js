@@ -5,7 +5,7 @@ const { app } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-const DEFAULT = { lastDir: null, volume: 0.9, visualizer: null, plays: {} };
+const DEFAULT = { lastDir: null, volume: 0.9, visualizer: null, plays: {}, history: [], skin: 'neon' };
 
 // Resolved lazily: app.getPath() is only valid once the app module is ready, and
 // load/save are always called from IPC handlers (well after that point).

@@ -1,16 +1,17 @@
 # Music Player
 
 A small, scalable desktop music player built on **Electron + the Web Audio API**,
-with a plug-in visualization system. It browses your folders like a file explorer
-(sortable, searchable columns with album art, BPM and key), plays audio with
-DJ-style transport, an explicit queue, and a harmonic shuffle, and renders seven
-real-time visualizers (waveform, spectrograph, stereograph, particles, a
-high-contrast "Black & White", a "BZ Reaction" reaction-diffusion field, and a
-layered "Sacred Geometry" form) that all tap a single shared audio graph — plus an
-always-on audio-reactive neon window border. In Listen mode, tracks auto-transition
-with a 10-second Spotify-style crossfade, and a Track History panel logs what played. A two-deck **Mix mode** adds a miniature DJ console: per-deck EQ/faders,
-scrolling waveforms with a beatgrid + phrase meter, bar jumps, drag-to-nudge, and
-a harmonic+popularity "suggested next".
+in the spirit of the early-2000s skinnable players (Winamp / foobar2000) and their
+real-time visualizations. It browses your folders like a file explorer (sortable,
+searchable columns with album art, BPM and key), plays audio with a familiar
+transport, an explicit queue, and a harmonic shuffle, and renders a rack of
+real-time visualizers (waveform, spectrograph, spectrogram, stereograph, particles,
+a high-contrast "Black & White", a "BZ Reaction" reaction-diffusion field, a layered
+"Sacred Geometry" form, and an "Esoteric" mode) that all tap a single shared audio
+graph — plus an always-on audio-reactive neon window border and quiet CRT scanlines.
+Tracks auto-transition with a 10-second Spotify-style crossfade, a Track History
+panel logs what played, and a harmonic+popularity "suggested next" proposes where to
+go.
 
 ## Why this stack
 
@@ -34,12 +35,22 @@ npm start
 - **electron** (dev) — the desktop runtime.
 - **music-metadata** — reads title/artist/album/duration/**bpm/key** tags and
   embedded **album art** from audio files. Everything else (folder browsing,
-  queue, harmonic shuffle, persistence, the two-deck audio graph, all four
+  queue, harmonic shuffle, persistence, the crossfading audio graph, all the
   visualizers, the reactive chrome) uses Node and browser built-ins, so the
   runtime dependency count is one.
 
 ## Using it
 
+- The bottom strip is a **Winamp-style player console**: a green **LCD display** with
+  a segmented **time readout** (click it to toggle elapsed / remaining), a little
+  **spectrum analyzer** with bouncing bars + falling peak caps, a **scrolling title
+  marquee**, and **kbps · kHz · stereo** readouts pulled from the file's tags — over
+  chunky beveled **prev / play / stop / next** transport.
+- **🎨 Skin** (top bar) cycles six **skins** — *Neon* (default), *Classic* (brushed
+  titanium + green phosphor LCD), *Vaporwave* (purple / pink / cyan), *Terminal*
+  (matrix-green monochrome), *Amber* (amber-CRT monochrome), and *Ruby* (crimson neon +
+  gold). Each is a CSS-variable palette; the choice persists. The whole UI re-themes
+  together, including the LCD spectrum analyzer.
 - The left pane is a **folder browser** with file-explorer **columns** (art,
   title, artist, album, length, BPM, key). Click a folder to enter; use **Up** or
   the **breadcrumbs** to go back. **Open…** picks any directory.
@@ -54,41 +65,17 @@ npm start
   log of what has played (most recent first), persisted across restarts. Click a row
   to play it now, **＋** to re-queue it, **Clear** to empty. With both panels open,
   History docks to the right of the Queue.
-- **Auto-transition (Listen mode):** when the playing track nears its end and the
-  queue has a next track, the next track starts on the idle deck and the two **overlap
-  for a 10-second crossfade** through the shared master graph — a seamless, Spotify-
-  style segue (no tempo-matching; that's Mix mode's job). Short tracks fall back to a
-  clean cut.
+- **Auto-transition:** when the playing track nears its end and the queue has a next
+  track, the next track starts on the idle deck and the two **overlap for a 10-second
+  crossfade** through the shared master graph — a seamless, Spotify-style segue. Short
+  tracks fall back to a clean cut.
 - **🔀 Shuffle** builds a queue from the current folder, ordered by **harmonic key
-  compatibility** (Camelot wheel) with random tie-breaking, so the mix stays
+  compatibility** (Camelot wheel) with random tie-breaking, so the set stays
   cohesive. Tracks without key tags are sprinkled in.
 - **🔀 (library toolbar)** shuffles just the **track view** — folders keep their order;
   only the displayed tracks are randomized, to spark ideas for what to play next.
   Press again to reshuffle; clicking any column header returns to the sorted view.
-- A **Currently playing:** chip in the Listen view always shows the active track over
-  the visualizer.
-- **⇄ mix** crossfades into the next queued track, tempo-matching by BPM (see
-  *DJ framework* below).
-- **🎧 Mix** toggles between **Listen mode** (visualizer + queue) and **Mix mode**:
-  two **XDJ-style players** flanking a central **2-channel mixer**. Each deck has:
-  - a **scrolling waveform** with a **beatgrid** (beats / bars / 16-beat phrases),
-    a **bar·beat readout**, a **phrase circle** (CDJ-style 16-step meter) and a big
-    **BPM readout**;
-  - **drag the waveform** left/right to nudge/scrub for lining up a mix;
-  - **beat-jump performance pads** — `◀16 ◀8 ◀4 ◀1 | 1▶ 4▶ 8▶ 16▶` — that jump by a
-    number of beats, exactly like the pads on a DJ controller. They use the track's
-    **BPM tag, or an estimate** computed from the waveform when no tag exists (so the
-    pads and beatgrid work on untagged files);
-  - **CUE / play / SYNC / LOAD** transport and a **tempo/pitch** fader.
-  The **central mixer** is the main mixing area: per-channel **3-band EQ (HI/MID/LOW)**
-  trims and a **vertical channel volume fader** (styled like real DJ gear) with a live
-  **VU meter** for **Track A** and **Track B**, an **A↔B crossfader**, **Next → cue**,
-  and **⇄ auto** (beatmatch+crossfade). **Load** (or **drag a track from the library
-  onto a deck**) loads it; **Sync** both **tempo-matches** and **beat-phase-aligns** a
-  deck to the other (its beats snap to the other deck's grid). Entering Mix mode centers
-  the crossfader so **both decks pass to the master and can be played/mixed at once** —
-  the per-channel faders then set each deck's level. Both decks sum into the master, so
-  the visualizers always read the live A+B mix. Leaving Mix mode restores clean playback.
+- A **Currently playing:** chip always shows the active track over the visualizer.
 - **💡 Suggested next** (in the Queue panel) ranks the current folder's other
   tracks by **harmonic key compatibility** (Camelot distance) nudged by local
   **play-count popularity**; click to queue.
@@ -115,50 +102,42 @@ src/
     browser.js          #   folder nav + sortable/searchable column table + art
     queue.js            #   explicit play-queue model
     key.js              #   Camelot key parsing + harmonic shuffle
-    audio-engine.js     #   two-deck graph: per-deck EQ + fader + crossfade/beatmatch
-    deck-monitors.js    #   per-deck waveform + beatgrid + phrase meter + drag-nudge
+    audio-engine.js     #   two-deck graph for seamless gapless crossfades
     chrome.js           #   always-on reactive overlay (neon border + cursor trail)
+    mini-spectrum.js    #   the LCD's little Winamp-style spectrum analyzer (an overlay)
     viz/
       interface.js      #   the visualizer interface (+ base class)
       manager.js        #   render loop, input capture, frame, switching, overlays
       waveform.js
       spectrograph.js   #   log-freq, smooth fill, falling peak-hold (Wave Candy-ish)
+      spectrogram-analyzer.js #  scrolling FFT spectrogram
       stereograph.js
       particles.js      #   audio-reactive swarm (per-band colour, emitters, forces)
       blackwhite.js     #   G Jones-inspired monochrome placeholder (kaleido + glitch)
       reaction.js       #   digital Belousov-Zhabotinsky field: ASCII filter + kaleido + glitch
       sacred.js         #   layered sacred geometry / fractals / math curves (extensible layers)
+      esoteric.js       #   esoteric/occult-themed reactive form
 ```
 
-### Mix mode (mini DJ console) + beatmatch framework
+### Seamless crossfade
 
 [audio-engine.js](src/renderer/audio-engine.js) is a **two-deck** engine (fixed
-decks A/B), each with a full channel strip — `source → 3-band EQ → channel fader →
-crossfader gain → master` plus a per-deck monitor analyser — all summed before the
-shared analyser, so visualizers and the live scopes see the real mix:
+decks A/B). Each deck is just `source → crossfader gain → master`; both sum before
+the shared analyser, so the visualizers always read the live signal — including the
+brief overlap during a segue:
 
 ```
-Deck A -> EQ -> fader -> xfA \                         /-> Analyser -> out
-                              +-> master(volume) -----+
-Deck B -> EQ -> fader -> xfB /                         \-> Splitter -> L/R
+Deck A -> gainA \                         /-> Analyser -> out
+                 +-> master(volume) -----+
+Deck B -> gainB /                         \-> Splitter -> L/R
 ```
 
-An **equal-power crossfader** blends the decks. The Mix-mode UI drives it directly
-(`setCrossfader`, `setDeckEq`, `setDeckVolume`, `setDeckRate`, `loadDeck`,
-`toggleDeck`, `seekDeck`); **Sync** computes a rate from BPM tags. **⇄ auto** uses
-`crossfadeTo(...)`, which loads the next track onto the idle deck, **tempo-matches**
-via `playbackRate`, animates the crossfader across, and hands transport to the
-incoming deck. Leaving Mix mode calls `normalize()` for clean single-deck listening.
-
-BPM comes from the file's tag when present, otherwise from
-[`estimateBpm`](src/renderer/audio-engine.js) — an autocorrelation of the decoded
-waveform's onset envelope — so the beatgrid and beat-jump pads work on untagged
-tracks. Left as **hooks** for the next layer: the beatgrid still assumes beat 0 at
-track start (the **phase**/downbeat offset is the missing piece — `beatOffset` is a
-ready field), and `playbackRate` shifts pitch (no time-stretch). Waveform peaks are
-decoded once per deck load ([engine `decodePeaks`](src/renderer/audio-engine.js),
-via the `fs:readFile` IPC). Harmonic data from [key.js](src/renderer/key.js) drives
-both the shuffle and the "suggested next".
+While the current deck plays out, `crossfadeTo(url, { duration })` loads the next
+track onto the idle deck, starts it, and sweeps an **equal-power crossfader** across,
+handing transport to the incoming deck. Normal playback (`load`) brings the primary
+deck fully up and leaves the other silent, so single-track listening is unaffected.
+Harmonic data from [key.js](src/renderer/key.js) drives both the shuffle and the
+"suggested next".
 
 ### Performance
 
@@ -204,8 +183,8 @@ object, and switches the active visualizer. To add one:
 1. Create `src/renderer/viz/my-viz.js` exporting a class with `static id` /
    `static label` that implements the interface.
 2. Register it in [src/renderer/app.js](src/renderer/app.js) — add your class to
-   the `[Waveform, Spectrograph, Stereograph, Particles, BlackWhite, Reaction,
-   SacredGeometry]` list.
+   the `[Waveform, Spectrograph, SpectrogramAnalyzer, Stereograph, Particles,
+   BlackWhite, Reaction, SacredGeometry, Esoteric]` list.
 
 That's all. Nothing in the audio engine changes. [particles.js](src/renderer/viz/particles.js)
 is the worked example: it reads `frame.input.pointer` and needs nothing from the
@@ -227,5 +206,6 @@ full-window effects.
 
 ## Out of scope (by design)
 
-Playlists, tagging, equalizer, streaming, crossfade/beatmatching, and theming
-beyond folder browsing + visualizer switching.
+DJ/mixing (beatmatching, EQ, decks — that lives in a separate project), playlists,
+tagging, equalizer, and streaming. The focus here is a clean player + a growing rack
+of visualizers in the early-2000s skinnable-player tradition.

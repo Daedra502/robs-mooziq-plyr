@@ -30,6 +30,16 @@ function createWindow() {
 
   mainWindow.setMenuBarVisibility(false);
   mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+
+  // --- Navigation hardening --------------------------------------------------
+  // This app only ever shows its own bundled page. Block any attempt to open
+  // new windows or navigate elsewhere (e.g. a crafted link or media tag in
+  // someone else's files), so the renderer can't be steered to remote content.
+  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (url !== mainWindow.webContents.getURL()) event.preventDefault();
+  });
+  mainWindow.webContents.on('will-attach-webview', (event) => event.preventDefault());
 }
 
 // --- IPC ---------------------------------------------------------------------
@@ -57,8 +67,12 @@ ipcMain.handle('fs:listDir', async (_event, dirPath) => {
 ipcMain.handle('fs:getArt', (_event, filePath) => library.getArt(filePath));
 
 // Raw bytes of a file (for decoding waveform peaks in the renderer). Returned as
-// a Buffer, which arrives in the renderer as a Uint8Array.
-ipcMain.handle('fs:readFile', (_event, filePath) => require('fs/promises').readFile(filePath));
+// a Buffer, which arrives in the renderer as a Uint8Array. Restricted to audio
+// files so this can't be used to read arbitrary paths off disk.
+ipcMain.handle('fs:readFile', (_event, filePath) => {
+  if (typeof filePath !== 'string' || !library.isAudioPath(filePath)) return null;
+  return require('fs/promises').readFile(filePath);
+});
 
 // A sensible starting directory when nothing is persisted yet.
 ipcMain.handle('fs:defaultDir', () => {

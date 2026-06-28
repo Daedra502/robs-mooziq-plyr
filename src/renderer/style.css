@@ -1,4 +1,14 @@
+/* ===========================================================================
+   SKINS. Every themeable colour is a CSS variable; a skin is just a palette that
+   overrides them on `body[data-skin="…"]`. The default palette lives on :root
+   ("neon"). The mini spectrum analyzer reads its --vis-* vars from the canvas's
+   computed style, so it re-skins along with everything else.
+   =========================================================================== */
 :root {
+  /* Shared library table columns: art title artist album len bpm key */
+  --cols: 30px minmax(70px, 1.8fr) minmax(54px, 1.3fr) minmax(54px, 1.2fr) 48px 42px 46px;
+
+  /* ---- Skin: Neon (default) — midnight blue with cyan/pink neon ---- */
   --bg: #0a0a0f;
   --panel: #12121b;
   --panel-2: #1b1b27;
@@ -7,8 +17,157 @@
   --accent: #49c2ff;
   --accent-2: #ff5ab4;
   --border: #262640;
-  /* Shared library table columns: art title artist album len bpm key */
-  --cols: 30px minmax(70px, 1.8fr) minmax(54px, 1.3fr) minmax(54px, 1.2fr) 48px 42px 46px;
+  --row-sel: #1f2c3a;
+  --row-play: #223a52;
+  --console-bg: linear-gradient(180deg, #1a1a24, #101019);
+  --btn-bg: linear-gradient(180deg, #34344a 0%, #20202e 52%, #181824 100%);
+  --btn-bg-hover: linear-gradient(180deg, #3c3c54, #242433 52%, #1c1c2a 100%);
+  --btn-border: #05050a;
+  --btn-text: #d6d6e6;
+  --lcd: #2bd24f;
+  --lcd-dim: #1c7e34;
+  --lcd-bg: #05140a;
+  --scanline: rgba(255, 255, 255, 0.025);
+  --title-font: "Segoe UI", system-ui, sans-serif;
+  /* spectrum analyzer (bottom→top gradient stops + peak cap) */
+  --vis-bg: #05140a;
+  --vis-1: #0a6b2a; --vis-2: #2bd24f; --vis-3: #9be84b; --vis-4: #ffd23f;
+  --vis-peak: rgba(220, 255, 220, 0.9);
+}
+
+/* ---- Skin: Winamp Classic — brushed titanium with a green phosphor LCD ---- */
+body[data-skin="classic"] {
+  --bg: #20232b;
+  --panel: #2a2e38;
+  --panel-2: #353a46;
+  --text: #e9edf4;
+  --muted: #98a2b2;
+  --accent: #7fb2dc;
+  --accent-2: #b7c3d4;
+  --border: #4a5161;
+  --row-sel: #313a49;
+  --row-play: #3a4a63;
+  --console-bg: linear-gradient(180deg, #5a606e, #383d48);
+  --btn-bg: linear-gradient(180deg, #757b89 0%, #4d525e 52%, #3a3e48 100%);
+  --btn-bg-hover: linear-gradient(180deg, #828998, #555b67 52%, #41454f 100%);
+  --btn-border: #20242c;
+  --btn-text: #f2f5fa;
+  --lcd: #46e06a;
+  --lcd-dim: #2a8a44;
+  --lcd-bg: #07160c;
+  --scanline: rgba(255, 255, 255, 0); /* classic Winamp had no scanlines */
+  --title-font: "Tahoma", "Segoe UI", system-ui, sans-serif;
+  --vis-bg: #07160c;
+  --vis-1: #0a6b2a; --vis-2: #2bd24f; --vis-3: #7ad84a; --vis-4: #d9f06a;
+  --vis-peak: rgba(230, 255, 230, 0.95);
+}
+
+/* ---- Skin: Vaporwave — Y2K deep-purple with hot-pink/cyan and a cyan LCD ---- */
+body[data-skin="vapor"] {
+  --bg: #1a0b2e;
+  --panel: #240f3e;
+  --panel-2: #341a55;
+  --text: #ffe3ff;
+  --muted: #b98fd6;
+  --accent: #ff77e1;
+  --accent-2: #66f0ff;
+  --border: #5a2a7a;
+  --row-sel: #341a55;
+  --row-play: #46206e;
+  --console-bg: linear-gradient(180deg, #3a1a5c, #22103a);
+  --btn-bg: linear-gradient(180deg, #5a2a8a 0%, #3a1a5c 52%, #2a1145 100%);
+  --btn-bg-hover: linear-gradient(180deg, #6a32a0, #46206e 52%, #341a55 100%);
+  --btn-border: #160826;
+  --btn-text: #ffe3ff;
+  --lcd: #66f0ff;
+  --lcd-dim: #2f8aa0;
+  --lcd-bg: #0e0426;
+  --scanline: rgba(255, 120, 225, 0.045);
+  --title-font: "Segoe UI", system-ui, sans-serif;
+  --vis-bg: #0e0426;
+  --vis-1: #6a2a9a; --vis-2: #ff77e1; --vis-3: #c77bff; --vis-4: #66f0ff;
+  --vis-peak: rgba(255, 255, 255, 0.95);
+}
+
+/* ---- Skin: Terminal — monochrome matrix-green phosphor on black ---- */
+body[data-skin="terminal"] {
+  --bg: #000600;
+  --panel: #001a06;
+  --panel-2: #002b0a;
+  --text: #33ff66;
+  --muted: #1c8a3a;
+  --accent: #39ff14;
+  --accent-2: #00cc55;
+  --border: #0a4d1a;
+  --row-sel: #002b0a;
+  --row-play: #014012;
+  --console-bg: linear-gradient(180deg, #011a07, #000600);
+  --btn-bg: linear-gradient(180deg, #023d12 0%, #012b0c 52%, #001a06 100%);
+  --btn-bg-hover: linear-gradient(180deg, #034d18, #023d12 52%, #012b0c 100%);
+  --btn-border: #000600;
+  --btn-text: #33ff66;
+  --lcd: #39ff14;
+  --lcd-dim: #1c8a3a;
+  --lcd-bg: #001005;
+  --scanline: rgba(0, 255, 80, 0.05);
+  --title-font: "Consolas", "DejaVu Sans Mono", ui-monospace, monospace;
+  --vis-bg: #001005;
+  --vis-1: #064d12; --vis-2: #1fbf30; --vis-3: #39ff14; --vis-4: #9bff5a;
+  --vis-peak: rgba(220, 255, 200, 0.95);
+}
+
+/* ---- Skin: Amber — warm amber-CRT monochrome (old phosphor terminal) ---- */
+body[data-skin="amber"] {
+  --bg: #140d00;
+  --panel: #1f1500;
+  --panel-2: #2b1d00;
+  --text: #ffb000;
+  --muted: #9a6b00;
+  --accent: #ffb000;
+  --accent-2: #ff7b00;
+  --border: #4d3300;
+  --row-sel: #2b1d00;
+  --row-play: #3d2900;
+  --console-bg: linear-gradient(180deg, #1a1200, #0e0900);
+  --btn-bg: linear-gradient(180deg, #3d2e00 0%, #2b1d00 52%, #1f1500 100%);
+  --btn-bg-hover: linear-gradient(180deg, #4d3a00, #352500 52%, #281c00 100%);
+  --btn-border: #0e0900;
+  --btn-text: #ffb000;
+  --lcd: #ffb000;
+  --lcd-dim: #9a6b00;
+  --lcd-bg: #140d00;
+  --scanline: rgba(255, 176, 0, 0.05);
+  --title-font: "Consolas", "DejaVu Sans Mono", ui-monospace, monospace;
+  --vis-bg: #140d00;
+  --vis-1: #6b4500; --vis-2: #ffb000; --vis-3: #ffd000; --vis-4: #fff0a0;
+  --vis-peak: rgba(255, 244, 214, 0.95);
+}
+
+/* ---- Skin: Ruby — dark charcoal with crimson neon and gold ---- */
+body[data-skin="ruby"] {
+  --bg: #100406;
+  --panel: #1d070b;
+  --panel-2: #2a0a11;
+  --text: #ffe0e6;
+  --muted: #c07a86;
+  --accent: #ff3b5c;
+  --accent-2: #ffd24a;
+  --border: #5a1722;
+  --row-sel: #2a0a11;
+  --row-play: #3d0e1a;
+  --console-bg: linear-gradient(180deg, #2a0a11, #160509);
+  --btn-bg: linear-gradient(180deg, #4a1320 0%, #2a0a11 52%, #1d070b 100%);
+  --btn-bg-hover: linear-gradient(180deg, #5a1828, #341019 52%, #240a10 100%);
+  --btn-border: #0e0306;
+  --btn-text: #ffe0e6;
+  --lcd: #ff3b5c;
+  --lcd-dim: #a02438;
+  --lcd-bg: #160508;
+  --scanline: rgba(255, 59, 92, 0.045);
+  --title-font: "Segoe UI", system-ui, sans-serif;
+  --vis-bg: #160508;
+  --vis-1: #6b0f1e; --vis-2: #ff3b5c; --vis-3: #ff8a5a; --vis-4: #ffd24a;
+  --vis-peak: rgba(255, 245, 245, 0.95);
 }
 
 * { box-sizing: border-box; }
@@ -23,12 +182,12 @@ html, body {
   user-select: none;
 }
 
-/* Subtle CRT scanlines — a quiet 2000s nod. */
+/* Subtle CRT scanlines — a quiet 2000s nod. Intensity is per-skin (--scanline). */
 body::after {
   content: "";
   position: fixed; inset: 0; pointer-events: none; z-index: 50;
   background: repeating-linear-gradient(to bottom,
-    rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
+    var(--scanline) 0px, var(--scanline) 1px, transparent 1px, transparent 3px);
 }
 
 #app {
@@ -50,6 +209,7 @@ body::after {
 
 .neon {
   margin: 0 0 10px;
+  font-family: var(--title-font);
   font-size: 19px; letter-spacing: 3px; text-align: center;
   color: #fff; text-transform: lowercase;
   text-shadow: 0 0 5px var(--accent), 0 0 12px var(--accent), 0 0 24px var(--accent-2);
@@ -105,8 +265,8 @@ body::after {
 .c-artist, .c-album { color: var(--muted); font-size: 12px; }
 .c-len, .c-bpm, .c-key { text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--muted); }
 .c-key { color: var(--accent-2); }
-.entry.file.selected { background: #1f2c3a; }
-.entry.file.playing { background: #223a52; }
+.entry.file.selected { background: var(--row-sel); }
+.entry.file.playing { background: var(--row-play); }
 .entry.file.playing .c-title { color: var(--accent); font-weight: 600; }
 
 .entry.file .actions {
@@ -172,126 +332,62 @@ body::after {
 #queue-list { list-style: none; margin: 0; padding: 6px; overflow-y: auto; flex: 1; }
 .q-item { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 6px; }
 .q-item:hover { background: var(--panel-2); }
-.q-item.current { background: #223a52; }
+.q-item.current { background: var(--row-play); }
 .q-title { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; cursor: pointer; }
 .q-item.current .q-title { color: var(--accent); font-weight: 600; }
 .q-rm { padding: 2px 6px; font-size: 11px; }
-
-/* --- Modes (Listen vs Mix) ------------------------------------------------- */
-#dj-console { display: none; }
-#stage.mix #dj-console { display: flex; }
-#stage.mix #canvas-wrap { display: none; }
-#stage.mix .transport, #stage.mix .seek { display: none; }
-#mode-toggle.active { background: var(--accent-2); color: #1a0411; border-color: var(--accent-2); font-weight: 600; }
-
-/* --- DJ console (two XDJ players + central mixer) -------------------------- */
-#dj-console { flex: 1; min-height: 0; gap: 12px; padding: 14px 16px; overflow: auto; align-items: stretch; }
-
-/* ----- XDJ-style deck ----- */
-.deck { flex: 1; min-width: 0; background: linear-gradient(180deg, #15151f, #0e0e16); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.04); }
-.deck.live { border-color: var(--accent-2); box-shadow: 0 0 14px rgba(255,90,180,0.28), inset 0 1px 0 rgba(255,255,255,0.05); }
-.deck-head { display: flex; align-items: center; gap: 10px; }
-.deck-art { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; background: #2a2a3c; }
-.deck-tag { background: var(--accent); color: #04141f; font-weight: 700; border-radius: 5px; padding: 2px 8px; font-size: 13px; }
-.deck.live .deck-tag { background: var(--accent-2); }
-.deck-info { min-width: 0; flex: 1; }
-.deck-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
-.deck-meta { font-size: 12px; color: var(--muted); }
-/* XDJ-style segmented BPM readout */
-.deck-bpm { display: flex; flex-direction: column; align-items: flex-end; line-height: 1; padding: 4px 8px; border-radius: 6px; background: #05050a; border: 1px solid var(--border); }
-.bpm-num { font: 700 20px/1 "Segoe UI", system-ui, sans-serif; font-variant-numeric: tabular-nums; color: var(--accent); text-shadow: 0 0 8px rgba(73,194,255,0.6); }
-.deck.live .bpm-num { color: var(--accent-2); text-shadow: 0 0 8px rgba(255,90,180,0.6); }
-.bpm-unit { font-size: 9px; letter-spacing: 1px; color: var(--muted); }
-
-.deck-wave { width: 100%; height: 120px; background: #07070d; border-radius: 6px; display: block; cursor: ew-resize; touch-action: none; border: 1px solid #1a1a28; }
-.deck.drag-over { outline: 2px dashed var(--accent); outline-offset: -4px; }
-.deck-seek { display: flex; align-items: center; gap: 8px; }
-.deck-seek input { flex: 1; }
-
-/* Performance pads (beat jump) */
-.pads-wrap { display: flex; flex-direction: column; gap: 4px; }
-.pads-label { font-size: 9px; letter-spacing: 1.5px; color: var(--muted); }
-.pads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.pad {
-  padding: 9px 4px; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
-  border-radius: 6px; border: 1px solid #34344e;
-  background: linear-gradient(180deg, #23233a, #181826);
-  color: var(--text); box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 2px 4px rgba(0,0,0,0.4);
-  transition: background 0.08s, box-shadow 0.08s, transform 0.05s;
-}
-.pad:hover:not(:disabled) { border-color: var(--accent); }
-.pad:active, .pad.lit { background: linear-gradient(180deg, var(--accent), #1d7fb0); color: #04141f; box-shadow: 0 0 12px rgba(73,194,255,0.7); transform: translateY(1px); }
-#deck-B .pad:active, #deck-B .pad.lit { background: linear-gradient(180deg, var(--accent-2), #b03070); color: #1a0411; box-shadow: 0 0 12px rgba(255,90,180,0.7); }
-
-.deck-transport { display: flex; gap: 6px; }
-.deck-transport button { flex: 1; padding: 9px 4px; font-size: 13px; font-weight: 600; }
-.deck-transport .play { flex: 1.3; color: var(--accent); }
-.deck-transport .cue { color: #ffcf6b; }
-.deck-tempo { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.5px; color: var(--muted); }
-.deck-tempo input { flex: 1; }
-.rateval { min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
-
-/* ----- Central 2-channel mixer ----- */
-.mixer { width: 210px; flex: 0 0 210px; display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px; background: linear-gradient(180deg, #14141d, #0c0c14); border: 1px solid var(--border); }
-.mixer-head { text-align: center; font-size: 11px; letter-spacing: 3px; color: var(--muted); }
-.mixer-channels { flex: 1; min-height: 0; display: flex; gap: 10px; justify-content: center; }
-.ch { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; background: #0b0b12; border: 1px solid var(--border); border-radius: 8px; padding: 10px 6px; }
-.ch-eq { display: flex; gap: 6px; justify-content: center; }
-.trim { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 9px; letter-spacing: 0.5px; color: var(--muted); }
-.ch-fader { flex: 1; min-height: 120px; display: flex; align-items: stretch; justify-content: center; gap: 8px; }
-/* VU meter beside the channel fader */
-.vu { width: 7px; align-self: stretch; border-radius: 3px; background: #05050a; border: 1px solid #1c1c2a; overflow: hidden; display: flex; align-items: flex-end; }
-.vu-fill { display: block; width: 100%; height: 0%; background: linear-gradient(0deg, #2ec27e 0%, #2ec27e 62%, #ffd23f 80%, #ff4d6d 100%); transition: height 0.06s linear; }
-.ch-name { font-weight: 700; color: var(--accent); }
-#ch-B .ch-name { color: var(--accent-2); }
-
-/* Crossfader + actions */
-.crossfader { display: flex; align-items: center; gap: 8px; }
-.crossfader input { flex: 1; }
-.crossfader span { color: var(--muted); font-weight: 700; font-size: 12px; }
-.mixer-actions { display: flex; flex-direction: column; gap: 6px; }
-.mixer-actions button { width: 100%; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
-
-/* ----- Vertical sliders: EQ trims + channel faders (DJ-style) ----- */
-input[type="range"].vrange, input[type="range"].fader {
-  -webkit-appearance: none; appearance: none;
-  writing-mode: vertical-lr; direction: rtl; /* bottom = min, top = max */
-  padding: 0; background: transparent;
-}
-input[type="range"].vrange { width: 22px; height: 64px; }
-input[type="range"].fader { width: 30px; height: 100%; }
-/* Slotted track look */
-input[type="range"].vrange::-webkit-slider-runnable-track,
-input[type="range"].fader::-webkit-slider-runnable-track {
-  width: 6px; height: 100%; border-radius: 4px;
-  background: linear-gradient(90deg, #05050a, #1c1c2a, #05050a);
-  box-shadow: inset 0 0 3px #000;
-}
-/* EQ trim thumb: small round cap */
-input[type="range"].vrange::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 18px; height: 12px; border-radius: 3px; border: 1px solid #000;
-  background: linear-gradient(180deg, #d8d8e6, #8a8aa2 48%, #3a3a4e 52%, #20202e);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.6);
-}
-/* Channel fader cap: wide flat DJ fader knob with a grip line */
-input[type="range"].fader::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 34px; height: 16px; border-radius: 3px; border: 1px solid #000;
-  background:
-    linear-gradient(180deg, transparent 44%, #ff5ab4 44%, #ff5ab4 56%, transparent 56%),
-    linear-gradient(180deg, #e8e8f0, #9a9ab0 46%, #44445c 54%, #26263a);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.7), 0 0 0 1px #555 inset;
-}
-#ch-A input.fader::-webkit-slider-thumb {
-  background:
-    linear-gradient(180deg, transparent 44%, var(--accent) 44%, var(--accent) 56%, transparent 56%),
-    linear-gradient(180deg, #e8e8f0, #9a9ab0 46%, #44445c 54%, #26263a);
+/* --- Player console (Winamp-style) ----------------------------------------- */
+#controls {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 16px 14px; border-top: 1px solid var(--border);
+  background: var(--console-bg); /* brushed-metal console (per skin) */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
-/* --- Controls -------------------------------------------------------------- */
-#controls { display: flex; align-items: center; gap: 18px; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--panel); flex-wrap: wrap; }
-.transport { display: flex; gap: 6px; }
+/* The LCD display block: status + time + mini-vis + scrolling title + readouts. */
+#player-lcd {
+  display: flex; align-items: stretch; gap: 12px;
+  padding: 8px 12px; border-radius: 6px;
+  background: var(--lcd-bg);
+  border: 1px solid rgba(0,0,0,0.5);
+  box-shadow: inset 0 0 0 1px #000, inset 0 2px 10px rgba(0,0,0,0.8);
+  font-family: "Consolas", "DejaVu Sans Mono", ui-monospace, monospace;
+}
+.lcd-left { display: flex; align-items: center; gap: 8px; }
+.lcd-status { font-size: 12px; color: var(--lcd-dim); width: 16px; text-align: center; }
+.lcd-status[data-state="play"] { color: var(--lcd); text-shadow: 0 0 6px var(--lcd); }
+.lcd-time {
+  font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--lcd); letter-spacing: 1px; cursor: pointer; user-select: none;
+  text-shadow: 0 0 6px var(--lcd); min-width: 78px;
+}
+#mini-vis {
+  width: 96px; align-self: center; height: 34px; border-radius: 3px;
+  background: var(--lcd-bg); border: 1px solid rgba(0,0,0,0.5);
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.8);
+}
+.lcd-main { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.lcd-marquee { overflow: hidden; white-space: nowrap; }
+#marquee-text {
+  display: inline-block; white-space: nowrap;
+  color: var(--lcd); font-size: 14px; font-weight: 600;
+  text-shadow: 0 0 5px rgba(43,210,79,0.5);
+}
+#marquee-text.scroll { animation: marquee 14s linear infinite; }
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  8%   { transform: translateX(0); }      /* brief pause at the start */
+  100% { transform: translateX(-100%); }
+}
+.lcd-info { font-size: 11px; color: var(--lcd-dim); letter-spacing: 0.5px; font-variant-numeric: tabular-nums; }
+.lcd-info .lcd-unit { margin-left: 2px; opacity: 0.8; }
+.lcd-info .lcd-dot { margin: 0 6px; opacity: 0.6; }
+.lcd-chan { text-transform: uppercase; }
+.lcd-chan.on { color: var(--lcd); text-shadow: 0 0 5px var(--lcd); }
+
+/* Transport row: buttons + seek + volume. */
+.transport-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.transport { display: flex; gap: 5px; }
 .seek { flex: 1; min-width: 200px; display: flex; align-items: center; gap: 10px; }
 .time { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 12px; min-width: 38px; text-align: center; }
 .volume { display: flex; align-items: center; gap: 8px; }
@@ -303,8 +399,16 @@ button:hover:not(:disabled) { border-color: var(--accent); }
 button:disabled { opacity: 0.35; cursor: default; }
 button.ghost { background: transparent; }
 button.active { background: var(--accent); color: #04141f; border-color: var(--accent); font-weight: 600; }
-.transport button { min-width: 40px; font-size: 14px; }
-#crossfade { min-width: auto; color: var(--accent-2); }
+/* Chunky beveled transport buttons (bevel colours come from the skin). */
+.transport button {
+  min-width: 42px; font-size: 15px; padding: 8px 12px; color: var(--btn-text);
+  border: 1px solid var(--btn-border); border-radius: 5px;
+  background: var(--btn-bg);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 2px 3px rgba(0,0,0,0.5);
+}
+.transport button:hover:not(:disabled) { border-color: var(--btn-border); background: var(--btn-bg-hover); }
+.transport button:active { transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(0,0,0,0.7); }
+.transport #play { color: var(--lcd); text-shadow: 0 0 6px var(--lcd); }
 #up-btn { padding: 5px 10px; }
 #queue-toggle { white-space: nowrap; }
 
