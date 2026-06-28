@@ -2,8 +2,9 @@
 
 A small **Electron + Web Audio** desktop music player with a plug-in visualizer
 system, in the early-2000s skinnable-player tradition (Winamp / foobar2000). Plain
-**ES modules, no framework, no build step, no bundler.** Read [README.md](../README.md)
-first — it is the design spec.
+**ES modules, no framework, no build step, no bundler.** Read
+[ARCHITECTURE.md](../ARCHITECTURE.md) first — it is the design spec
+([README.md](../README.md) is the plain-English overview).
 
 > **Note:** an older two-deck DJ "Mix mode" was removed; that feature now lives in a
 > separate project. This repo is a **player + visualizer** only. Do not reintroduce
