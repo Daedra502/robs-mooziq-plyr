@@ -32,14 +32,31 @@ your computer.
   and it sticks.
 - Your last folder, volume, and chosen visualizer are remembered between sessions.
 
-## Try it on your own machine
+## Download (Windows)
 
-You'll need [Node.js](https://nodejs.org/) 18 or newer installed.
+The easiest way to use it — no setup required:
+
+**➡️ [Download the latest version](https://github.com/Daedra502/robs-mooziq-plyr/releases/latest)**
+
+Grab one of these from the release:
+
+- **Installer** (`Music Player-…-x64.exe`) — double-click to install; adds a desktop
+  and Start-menu shortcut.
+- **Portable** (`Music Player-…-portable.exe`) — a single file, no install; just run it.
+
+The download is always rebuilt from the newest code automatically. Because it isn't
+code-signed, Windows may show a "Windows protected your PC" prompt the first time —
+click **More info → Run anyway**.
+
+## Run from source
+
+Want to run it yourself (any OS) or tinker with the code? You'll need
+[Node.js](https://nodejs.org/) 18 or newer installed.
 
 ```sh
 # 1. Get the code
-git clone https://github.com/Daedra502/music-player.git
-cd music-player
+git clone https://github.com/Daedra502/robs-mooziq-plyr.git
+cd robs-mooziq-plyr
 
 # 2. Install and launch
 npm install

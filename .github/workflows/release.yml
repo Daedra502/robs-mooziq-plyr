@@ -1,0 +1,49 @@
+name: Build & Release
+
+# Rebuild the Windows .exe files on every push to master and publish them to a
+# single rolling "latest" release, so the download on the Releases page always
+# reflects the newest committed code. Can also be run by hand from the Actions tab.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# Needed for the workflow to create/update the release and its tag.
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows installer + portable exe
+        run: npm run dist:win
+
+      - name: Publish to the rolling "latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build
+          body: |
+            Automatically built from the latest code on `master`.
+
+            - **Installer** — `Music Player-*-x64.exe` (sets up a Start-menu/desktop shortcut)
+            - **Portable** — `Music Player-*-portable.exe` (single file, just run it)
+
+            Windows may show a SmartScreen prompt the first time (the build is
+            unsigned): **More info → Run anyway**.
+          files: |
+            dist/*-x64.exe
+            dist/*-portable.exe
