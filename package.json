@@ -43,7 +43,7 @@
           ]
         }
       ],
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
+      "artifactName": "MusicPlayer-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -54,7 +54,7 @@
       "shortcutName": "Music Player"
     },
     "portable": {
-      "artifactName": "${productName}-${version}-portable.${ext}"
+      "artifactName": "MusicPlayer-Portable-${version}.${ext}"
     }
   }
 }

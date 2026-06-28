@@ -1,14 +1,18 @@
 name: Build & Release
 
-# Rebuild the Windows .exe files on every push to master and publish them to a
-# single rolling "latest" release, so the download on the Releases page always
-# reflects the newest committed code. Can also be run by hand from the Actions tab.
+# Builds the Windows .exe files and publishes them to GitHub Releases.
+#
+#   * Push to master (or a manual run)  -> updates the rolling "latest" release,
+#     so the everyday download always reflects the newest committed code.
+#   * Push a version tag like v0.2.0    -> creates a permanent, versioned release
+#     that is kept alongside older ones.
 on:
   push:
     branches: [master]
+    tags: ['v*']
   workflow_dispatch:
 
-# Needed for the workflow to create/update the release and its tag.
+# Needed for the workflow to create/update releases and their tags.
 permissions:
   contents: write
 
@@ -33,19 +37,37 @@ jobs:
         # we let the dedicated release step below handle upload instead.
         run: npm run dist:win -- --publish never
 
-      - name: Publish to the rolling "latest" release
+      # Decide which release to publish to based on what triggered the run.
+      - name: Determine release target
+        id: rel
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            echo "rolling=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+            echo "name=Latest build" >> "$GITHUB_OUTPUT"
+            echo "rolling=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: latest
-          name: Latest build
+          tag_name: ${{ steps.rel.outputs.tag }}
+          name: ${{ steps.rel.outputs.name }}
+          # The rolling build is marked as a pre-release so GitHub's "Latest
+          # release" always points at the newest stable, versioned release.
+          prerelease: ${{ steps.rel.outputs.rolling }}
           body: |
-            Automatically built from the latest code on `master`.
+            ${{ steps.rel.outputs.rolling == 'true' && 'Automatically built from the latest code on `master`. For a stable, fixed version, see the versioned releases.' || 'Stable versioned release.' }}
 
-            - **Installer** — `Music Player-*-x64.exe` (sets up a Start-menu/desktop shortcut)
-            - **Portable** — `Music Player-*-portable.exe` (single file, just run it)
+            - **Installer** — `MusicPlayer-Setup-*.exe` (sets up a Start-menu/desktop shortcut)
+            - **Portable** — `MusicPlayer-Portable-*.exe` (single file, just run it)
 
             Windows may show a SmartScreen prompt the first time (the build is
             unsigned): **More info → Run anyway**.
           files: |
-            dist/*-x64.exe
-            dist/*-portable.exe
+            dist/MusicPlayer-Setup-*.exe
+            dist/MusicPlayer-Portable-*.exe

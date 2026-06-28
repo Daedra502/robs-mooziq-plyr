@@ -36,17 +36,20 @@ your computer.
 
 The easiest way to use it — no setup required:
 
-**➡️ [Download the latest version](https://github.com/Daedra502/robs-mooziq-plyr/releases/latest)**
+**➡️ [Download the latest stable version](https://github.com/Daedra502/robs-mooziq-plyr/releases/latest)**
 
 Grab one of these from the release:
 
-- **Installer** (`Music Player-…-x64.exe`) — double-click to install; adds a desktop
+- **Installer** (`MusicPlayer-Setup-….exe`) — double-click to install; adds a desktop
   and Start-menu shortcut.
-- **Portable** (`Music Player-…-portable.exe`) — a single file, no install; just run it.
+- **Portable** (`MusicPlayer-Portable-….exe`) — a single file, no install; just run it.
 
-The download is always rebuilt from the newest code automatically. Because it isn't
-code-signed, Windows may show a "Windows protected your PC" prompt the first time —
-click **More info → Run anyway**.
+Because the build isn't code-signed, Windows may show a "Windows protected your PC"
+prompt the first time — click **More info → Run anyway**.
+
+> Want the very newest, bleeding-edge build instead? The
+> [**latest build**](https://github.com/Daedra502/robs-mooziq-plyr/releases/tag/latest)
+> is rebuilt automatically from the most recent code on every change.
 
 ## Run from source
 
