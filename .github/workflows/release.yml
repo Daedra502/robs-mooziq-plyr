@@ -29,7 +29,9 @@ jobs:
         run: npm ci
 
       - name: Build Windows installer + portable exe
-        run: npm run dist:win
+        # --publish never: electron-builder auto-publishes when it detects CI, but
+        # we let the dedicated release step below handle upload instead.
+        run: npm run dist:win -- --publish never
 
       - name: Publish to the rolling "latest" release
         uses: softprops/action-gh-release@v2
